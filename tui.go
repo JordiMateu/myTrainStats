@@ -23,6 +23,8 @@ var (
 	sectionStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("117"))
 )
 
+var version = "dev"
+
 type loadedMsg struct {
 	report string
 	err    error
@@ -138,7 +140,12 @@ func (m dashboard) View() string {
 func run() error {
 	refresh := flag.Bool("refresh", false, "Torna a descarregar els horaris")
 	plain := flag.Bool("plain", false, "Sortida de text sense interfície interactiva")
+	showVersion := flag.Bool("version", false, "Mostra la versió")
 	flag.Parse()
+	if *showVersion {
+		fmt.Println("myTrainStats " + version)
+		return nil
+	}
 	if *plain || !term.IsTerminal(os.Stdout.Fd()) || !term.IsTerminal(os.Stdin.Fd()) {
 		return collect(os.Stdout, *refresh)
 	}

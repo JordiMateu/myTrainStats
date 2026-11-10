@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Validate
+        run: |
+          go test ./...
+          go vet ./...
+      - name: Build Windows and macOS Apple Silicon
+        env:
+          CGO_ENABLED: '0'
+          VERSION: ${{ github.ref_name }}
+        run: |
+          mkdir -p dist/windows dist/macos
+          GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=$VERSION" -o dist/windows/mytrainstats.exe .
+          GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags "-s -w -X main.version=$VERSION" -o dist/macos/mytrainstats .
+          cp README.md dist/windows/
+          cp README.md dist/macos/
+          (cd dist/windows && zip -q "../myTrainStats_${VERSION}_windows_amd64.zip" mytrainstats.exe README.md)
+          tar -czf "dist/myTrainStats_${VERSION}_macos_arm64.tar.gz" -C dist/macos mytrainstats README.md
+          (cd dist && sha256sum *.zip *.tar.gz > checksums.txt)
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "myTrainStats $GITHUB_REF_NAME" --generate-notes dist/*.zip dist/*.tar.gz dist/checksums.txt

@@ -8,3 +8,4 @@ adif-*.json
 .idea/
 *~
 mytrainstats
+dist/

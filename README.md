@@ -17,7 +17,14 @@ Tot plegat amb [Bubble Tea](https://github.com/charmbracelet/bubbletea), Bubbles
 
 ## Com l'engego?
 
-Cal tenir **Go 1.24 o posterior** i connexió a Internet. No cal cap clau d'API.
+Pots descarregar l'executable de la [darrera release](https://github.com/JordiMateu/myTrainStats/releases/latest):
+
+- **Windows x64**: descomprimeix el ZIP i executa `.\mytrainstats.exe` des de PowerShell.
+- **macOS amb Apple Silicon (M1 o posterior)**: descomprimeix el `.tar.gz` i executa `./mytrainstats` des del Terminal. No és una compilació per a Intel.
+
+No cal instal·lar Go per utilitzar aquests executables. Necessiten connexió a Internet. La versió per a macOS no està signada ni notaritzada; el sistema pot demanar que n'autoritzis l'obertura des de Configuració del Sistema → Privacitat i seguretat. La release inclou les sumes SHA-256 a `checksums.txt`. Pots consultar la versió amb `-version`.
+
+Si prefereixes compilar-la, cal tenir **Go 1.24 o posterior**. No cal cap clau d'API.
 
 Des de la carpeta del projecte:
 
@@ -104,3 +111,5 @@ go vet ./...
 ```
 
 És un projecte petit que aniré ajustant segons el que em trobi anant i tornant de la feina. Si hi veus alguna cosa que falla o tens una idea que faria més fàcil consultar els trens, obre una issue.
+
+Les versions es documenten a [CHANGELOG.md](CHANGELOG.md). En pujar una etiqueta `v*`, GitHub Actions executa les proves i publica els binaris per a Windows x64 i macOS arm64, amb les sumes SHA-256.
