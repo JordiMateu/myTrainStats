@@ -1,6 +1,31 @@
 package main
 
-import "testing"
+import (
+	"bytes"
+	"fmt"
+	"net/http"
+	"strings"
+	"testing"
+)
+
+type offlineTransport struct{}
+
+func (offlineTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	return nil, fmt.Errorf("font no disponible durant la prova")
+}
+
+func TestCollectOfflineDoesNotPanic(t *testing.T) {
+	previous := client
+	client = &http.Client{Transport: offlineTransport{}}
+	t.Cleanup(func() { client = previous })
+	var report bytes.Buffer
+	if err := collect(&report, true); err == nil {
+		t.Fatal("Cal indicar que les fonts no estan disponibles")
+	}
+	if !strings.Contains(report.String(), "Barcelona Sants ↔ Girona") {
+		t.Fatal("Cal mostrar el resultat parcial sense fallar amb un pànic")
+	}
+}
 
 func TestCorridorRequiresBothStops(t *testing.T) {
 	for _, tc := range []struct {

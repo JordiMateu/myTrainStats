@@ -2,7 +2,7 @@
 
 Agafo el tren per anar a treballar a Barcelona, i abans de sortir de casa sempre acabo mirant el mateix: com va l'R11, si el tren porta retard i si hi ha alguna afectació pel camí.
 
-Vaig començar a mirar d'on treien les dades webs com La Vanguardia o Transporta'm i vaig acabar fent aquesta petita aplicació en Go. La idea és tenir el que em cal del trajecte **Girona ↔ Barcelona Sants** en una sola pantalla, des del terminal.
+Vaig començar a mirar d'on treien les dades webs com La Vanguardia o Transporta'm i vaig acabar fent aquesta petita aplicació en Go. La idea és tenir el que em cal del trajecte **Girona ↔ Barcelona Sants** en una sola pantalla al terminal del ordinador.
 
 De moment està pensada per a aquest recorregut i per al meu dia a dia. Si també el fas, potser et serveix.
 
@@ -52,6 +52,7 @@ go build -o mytrainstats .
 | --- | --- |
 | `↑` / `↓` | Moure's pel panell |
 | `PgUp` / `PgDn` | Pujar o baixar una pàgina |
+| `a` | Pausar o reprendre el Nyan Cat de la capçalera |
 | `r` | Tornar a consultar les dades |
 | `q` / `Ctrl+C` | Sortir |
 
@@ -65,7 +66,7 @@ go run . -refresh
 go run . -plain
 ```
 
-Els horaris es desen a `.cache` durant 24 hores per no descarregar-los cada vegada. Les hores es mostren amb la zona horària `Europe/Madrid`. Si es redirigeix la sortida a un fitxer, s'utilitza automàticament el mode de text.
+Els horaris es desen a `.cache` durant 24 hores per no descarregar-los cada vegada. Les hores es mostren amb la zona horària `Central European Time`. Si es redirigeix la sortida a un fitxer, s'utilitza automàticament el mode de text.
 
 ## D'on surten les dades?
 
@@ -110,6 +111,6 @@ go test ./...
 go vet ./...
 ```
 
-És un projecte petit que aniré ajustant segons el que em trobi anant i tornant de la feina. Si hi veus alguna cosa que falla o tens una idea que faria més fàcil consultar els trens, obre una issue.
+És un projecte petit que aniré ajustant segons el que em trobi i les ganes que en tingui. Si hi veus alguna cosa que falla o tens una idea que faria més fàcil consultar els trens, obre una issue.
 
 Les versions es documenten a [CHANGELOG.md](CHANGELOG.md). En pujar una etiqueta `v*`, GitHub Actions executa les proves i publica els binaris per a Windows x64 i macOS arm64, amb les sumes SHA-256.

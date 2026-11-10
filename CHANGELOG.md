@@ -1,5 +1,12 @@
 # Canvis
 
+## v0.1.1
+
+- Nyan Cat en ASCII amb arc de Sant Martí animat a la capçalera.
+- Tecla `a` per pausar o reprendre l'animació; s'amaga en terminals estrets.
+- Gestió de l'error en carregar la zona horària per evitar un pànic.
+- Prova de consulta sense connexió i comprovació del panell a 64 columnes.
+
 ## v0.1.0
 
 Primera versió per consultar els trens entre Girona i Barcelona Sants.

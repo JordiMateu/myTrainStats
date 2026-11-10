@@ -30,7 +30,7 @@ func TestDashboardRefreshAndQuit(t *testing.T) {
 }
 
 func TestDashboardFitsTerminal(t *testing.T) {
-	for _, size := range []tea.WindowSizeMsg{{Width: 80, Height: 24}, {Width: 32, Height: 16}} {
+	for _, size := range []tea.WindowSizeMsg{{Width: 80, Height: 24}, {Width: 64, Height: 16}, {Width: 32, Height: 16}} {
 		m := newDashboard(false)
 		model, _ := m.Update(size)
 		m = model.(dashboard)

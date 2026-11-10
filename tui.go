@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
@@ -29,6 +30,12 @@ type loadedMsg struct {
 	report string
 	err    error
 }
+type mascotTickMsg struct{}
+
+func mascotTick() tea.Cmd {
+	return tea.Tick(450*time.Millisecond, func(time.Time) tea.Msg { return mascotTickMsg{} })
+}
+
 type dashboard struct {
 	viewport      viewport.Model
 	spinner       spinner.Model
@@ -37,6 +44,8 @@ type dashboard struct {
 	report        string
 	err           error
 	width, height int
+	frame         int
+	animate       bool
 }
 
 func loadReport(refresh bool) tea.Cmd {
@@ -50,11 +59,18 @@ func newDashboard(refresh bool) dashboard {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = titleStyle
-	return dashboard{viewport: viewport.New(80, 16), spinner: s, loading: true, refresh: refresh, width: 84, height: 24}
+	return dashboard{viewport: viewport.New(80, 16), spinner: s, loading: true, refresh: refresh, width: 84, height: 24, animate: true}
 }
-func (m dashboard) Init() tea.Cmd { return tea.Batch(m.spinner.Tick, loadReport(m.refresh)) }
+func (m dashboard) Init() tea.Cmd {
+	return tea.Batch(m.spinner.Tick, loadReport(m.refresh), mascotTick())
+}
 func (m dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case mascotTickMsg:
+		if m.animate {
+			m.frame++
+		}
+		return m, mascotTick()
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -65,6 +81,9 @@ func (m dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "ctrl+c":
 			return m, tea.Quit
+		case "a":
+			m.animate = !m.animate
+			return m, nil
 		case "r":
 			if !m.loading {
 				m.loading = true
@@ -87,6 +106,22 @@ func (m dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.viewport, cmd = m.viewport.Update(msg)
 	return m, cmd
+}
+
+func mascotArt(frame int) string {
+	cat := []string{" .------. /\\_/\\", "~|::::::|( o.o)", " '------'  \" \" "}
+	if frame%2 != 0 {
+		cat[1] = "-|::::::|( o.o)"
+		cat[2] = " '------' \"   \""
+	}
+	colors := []string{"203", "221", "81"}
+	trailFrame := []string{"====", "~===", "=~==", "==~="}[frame%4]
+	rows := make([]string, 3)
+	for i := range rows {
+		trail := lipgloss.NewStyle().Foreground(lipgloss.Color(colors[i])).Render(trailFrame)
+		rows[i] = trail + lipgloss.NewStyle().Foreground(lipgloss.Color("218")).Render(cat[i])
+	}
+	return strings.Join(rows, "\n")
 }
 func renderReport(report string, width int) string {
 	var b strings.Builder
@@ -130,9 +165,16 @@ func (m dashboard) View() string {
 		status = dangerStyle.Render("Consulta parcial · alguna font no està disponible")
 	}
 	header := titleStyle.Render("RAIL / GIRONA") + "\n" + lipgloss.NewStyle().Bold(true).Render("Barcelona Sants ↔ Girona") + "\n" + ansi.Truncate(status, m.width-4, "…")
+	if m.width >= 64 {
+		leftWidth := m.width - 4 - 25
+		left := titleStyle.Render("RAIL / GIRONA") + "\n" + lipgloss.NewStyle().Bold(true).Render("Barcelona Sants ↔ Girona") + "\n" + ansi.Truncate(status, leftWidth, "…")
+		header = lipgloss.JoinHorizontal(lipgloss.Top, lipgloss.NewStyle().Width(leftWidth).Render(left), "  ", mascotArt(m.frame))
+	}
 	help := fmt.Sprintf("↑↓ / PgUp PgDn · navegar    r · actualitzar    q · sortir    %.0f%%", m.viewport.ScrollPercent()*100)
 	if m.width < 72 {
 		help = "↑↓ moure · r dades · q sortir"
+	} else {
+		help = fmt.Sprintf("↑↓ moure · r dades · a animació · q sortir · %.0f%%", m.viewport.ScrollPercent()*100)
 	}
 	footer := mutedStyle.Render(ansi.Truncate(help, m.width-4, "…"))
 	return lipgloss.NewStyle().Padding(1, 2).Render(header + "\n\n" + m.viewport.View() + "\n\n" + footer)

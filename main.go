@@ -226,7 +226,10 @@ func collect(w io.Writer, refresh bool) error {
 	w = &body
 	r11 := lineState{}
 	r11Routes := map[string]bool{}
-	loc, _ := time.LoadLocation("Europe/Madrid")
+	loc, err := time.LoadLocation("Europe/Madrid")
+	if err != nil {
+		return fmt.Errorf("no es pot carregar la zona horària Europe/Madrid: %w", err)
+	}
 	now := time.Now().In(loc)
 	fmt.Fprintf(w, "Barcelona Sants ↔ Girona · %s\nOrigen de les dades: Renfe Operadora (CC BY 4.0)\n", now.Format("02/01/2006 15:04 MST"))
 	failed := false
