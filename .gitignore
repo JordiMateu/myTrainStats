@@ -1,0 +1,10 @@
+.cache/
+*.exe
+*-sample.json
+sample.json
+catalog.json
+*.zip
+adif-*.json
+.idea/
+*~
+mytrainstats
