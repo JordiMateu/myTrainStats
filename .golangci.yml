@@ -1,0 +1,14 @@
+version: "2"
+
+linters:
+  settings:
+    errcheck:
+      exclude-functions:
+        # bytes.Buffer writes always return nil errors.
+        - fmt.Fprint(*bytes.Buffer)
+        - fmt.Fprintf(*bytes.Buffer)
+        - fmt.Fprintln(*bytes.Buffer)
+
+formatters:
+  enable:
+    - gofumpt

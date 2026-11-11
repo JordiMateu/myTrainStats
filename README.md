@@ -111,6 +111,13 @@ go test ./...
 go vet ./...
 ```
 
+Amb [golangci-lint v2](https://golangci-lint.run/docs/welcome/install/local/) pots aplicar el format de `gofumpt` i revisar el codi:
+
+```sh
+golangci-lint fmt
+golangci-lint run ./...
+```
+
 És un projecte petit que aniré ajustant segons el que em trobi i les ganes que en tingui. Si hi veus alguna cosa que falla o tens una idea que faria més fàcil consultar els trens, obre una issue.
 
 Les versions es documenten a [CHANGELOG.md](CHANGELOG.md). En pujar una etiqueta `v*`, GitHub Actions executa les proves i publica els binaris per a Windows x64 i macOS arm64, amb les sumes SHA-256.

@@ -30,6 +30,7 @@ type loadedMsg struct {
 	report string
 	err    error
 }
+
 type mascotTickMsg struct{}
 
 func mascotTick() tea.Cmd {
@@ -55,15 +56,18 @@ func loadReport(refresh bool) tea.Cmd {
 		return loadedMsg{b.String(), err}
 	}
 }
+
 func newDashboard(refresh bool) dashboard {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = titleStyle
 	return dashboard{viewport: viewport.New(80, 16), spinner: s, loading: true, refresh: refresh, width: 84, height: 24, animate: true}
 }
+
 func (m dashboard) Init() tea.Cmd {
 	return tea.Batch(m.spinner.Tick, loadReport(m.refresh), mascotTick())
 }
+
 func (m dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case mascotTickMsg:
@@ -123,6 +127,7 @@ func mascotArt(frame int) string {
 	}
 	return strings.Join(rows, "\n")
 }
+
 func renderReport(report string, width int) string {
 	var b strings.Builder
 	for _, line := range strings.Split(report, "\n") {
@@ -154,6 +159,7 @@ func renderReport(report string, width int) string {
 	}
 	return b.String()
 }
+
 func (m dashboard) View() string {
 	if m.width < 24 || m.height < 12 {
 		return "Amplia el terminal (mínim 24 × 12).\nq · sortir"
@@ -170,15 +176,14 @@ func (m dashboard) View() string {
 		left := titleStyle.Render("RAIL / GIRONA") + "\n" + lipgloss.NewStyle().Bold(true).Render("Barcelona Sants ↔ Girona") + "\n" + ansi.Truncate(status, leftWidth, "…")
 		header = lipgloss.JoinHorizontal(lipgloss.Top, lipgloss.NewStyle().Width(leftWidth).Render(left), "  ", mascotArt(m.frame))
 	}
-	help := fmt.Sprintf("↑↓ / PgUp PgDn · navegar    r · actualitzar    q · sortir    %.0f%%", m.viewport.ScrollPercent()*100)
-	if m.width < 72 {
-		help = "↑↓ moure · r dades · q sortir"
-	} else {
+	help := "↑↓ moure · r dades · q sortir"
+	if m.width >= 72 {
 		help = fmt.Sprintf("↑↓ moure · r dades · a animació · q sortir · %.0f%%", m.viewport.ScrollPercent()*100)
 	}
 	footer := mutedStyle.Render(ansi.Truncate(help, m.width-4, "…"))
 	return lipgloss.NewStyle().Padding(1, 2).Render(header + "\n\n" + m.viewport.View() + "\n\n" + footer)
 }
+
 func run() error {
 	refresh := flag.Bool("refresh", false, "Torna a descarregar els horaris")
 	plain := flag.Bool("plain", false, "Sortida de text sense interfície interactiva")
@@ -194,6 +199,7 @@ func run() error {
 	_, err := tea.NewProgram(newDashboard(*refresh), tea.WithAltScreen(), tea.WithMouseCellMotion()).Run()
 	return err
 }
+
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

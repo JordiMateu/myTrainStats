@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/url"
 	"strings"
 )
@@ -21,7 +21,7 @@ type restriction struct {
 	Notes  string  `json:"OBSERVACIONES"`
 }
 
-func collectAdif(w io.Writer) error {
+func collectAdif(w *bytes.Buffer) error {
 	fmt.Fprintln(w, "\nLimitacions Adif · àrea Barcelona–Girona")
 	fmt.Fprintln(w, "© Administrador de infraestructuras ferroviarias")
 	q := url.Values{"f": {"json"}, "where": {"CODLINEA IN ('050','270')"}, "geometry": {"2.05,41.35,2.9,42.05"}, "geometryType": {"esriGeometryEnvelope"}, "inSR": {"4326"}, "spatialRel": {"esriSpatialRelIntersects"}, "outFields": {"CODLINEA,DESCPSINI,DESCPSFIN,RESTRICCIONVELOCIDAD,PKINI,PKFIN,MOTIVO,OBSERVACIONES"}, "returnGeometry": {"false"}, "orderByFields": {"OBJECTID"}, "resultRecordCount": {"1000"}}
@@ -45,7 +45,7 @@ func collectAdif(w io.Writer) error {
 			return err
 		}
 		if result.Error != nil {
-			return fmt.Errorf("Adif: %s", result.Error.Message)
+			return fmt.Errorf("error d'Adif: %s", result.Error.Message)
 		}
 		for _, f := range result.Features {
 			a := f.Attributes
@@ -63,7 +63,7 @@ func collectAdif(w io.Writer) error {
 			break
 		}
 		if len(result.Features) == 0 {
-			return fmt.Errorf("Adif: paginació incompleta")
+			return fmt.Errorf("paginació incompleta d'Adif")
 		}
 	}
 	if count == 0 {

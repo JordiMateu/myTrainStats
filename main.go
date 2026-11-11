@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/csv"
 	"encoding/json"
-
 	"fmt"
 	"io"
 	"net/http"
@@ -20,6 +19,7 @@ import (
 type Event struct {
 	Delay *int `json:"delay"`
 }
+
 type Update struct {
 	Trip struct {
 		ID           string `json:"tripId"`
@@ -33,12 +33,14 @@ type Update struct {
 		Departure Event  `json:"departure"`
 	} `json:"stopTimeUpdate"`
 }
+
 type Text struct {
 	Translation []struct {
 		Text     string `json:"text"`
 		Language string `json:"language"`
 	} `json:"translation"`
 }
+
 type Alert struct {
 	Active []struct {
 		Start string `json:"start"`
@@ -51,6 +53,7 @@ type Alert struct {
 	Header      Text `json:"headerText"`
 	Description Text `json:"descriptionText"`
 }
+
 type Feed struct {
 	Header struct {
 		Timestamp string `json:"timestamp"`
@@ -60,11 +63,13 @@ type Feed struct {
 		Alert  *Alert  `json:"alert"`
 	} `json:"entity"`
 }
+
 type Trip struct {
 	Route, Number string
 	Stops         map[string]int
 	Departures    map[string]string
 }
+
 type Schedule struct {
 	Trips  map[string]*Trip
 	Routes map[string]string
@@ -77,13 +82,14 @@ func download(url string) ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 	if r.StatusCode != 200 {
 		return nil, fmt.Errorf("%s: HTTP %d", url, r.StatusCode)
 	}
 	b, e := io.ReadAll(io.LimitReader(r.Body, 100<<20))
 	return b, e
 }
+
 func schedule(kind, url string, refresh bool) (Schedule, error) {
 	s := Schedule{map[string]*Trip{}, map[string]string{}}
 	path := filepath.Join(".cache", kind+".zip")
@@ -96,10 +102,10 @@ func schedule(kind, url string, refresh bool) (Schedule, error) {
 		if _, e = zip.NewReader(bytes.NewReader(b), int64(len(b))); e != nil {
 			return s, e
 		}
-		if e = os.MkdirAll(".cache", 0755); e != nil {
+		if e = os.MkdirAll(".cache", 0o755); e != nil {
 			return s, e
 		}
-		if e = os.WriteFile(path, b, 0644); e != nil {
+		if e = os.WriteFile(path, b, 0o644); e != nil {
 			return s, e
 		}
 	}
@@ -107,7 +113,7 @@ func schedule(kind, url string, refresh bool) (Schedule, error) {
 	if e != nil {
 		return s, e
 	}
-	defer z.Close()
+	defer func() { _ = z.Close() }()
 	for _, name := range []string{"routes.txt", "trips.txt", "stop_times.txt"} {
 		found := false
 		for _, f := range z.File {
@@ -123,7 +129,7 @@ func schedule(kind, url string, refresh bool) (Schedule, error) {
 			c.FieldsPerRecord = -1
 			h, e := c.Read()
 			if e != nil {
-				r.Close()
+				_ = r.Close()
 				return s, e
 			}
 			idx := map[string]int{}
@@ -136,7 +142,7 @@ func schedule(kind, url string, refresh bool) (Schedule, error) {
 					break
 				}
 				if e != nil {
-					r.Close()
+					_ = r.Close()
 					return s, e
 				}
 				get := func(k string) string {
@@ -154,13 +160,13 @@ func schedule(kind, url string, refresh bool) (Schedule, error) {
 				case "stop_times.txt":
 					if t := s.Trips[get("trip_id")]; t != nil {
 						var seq int
-						fmt.Sscan(get("stop_sequence"), &seq)
+						_, _ = fmt.Sscan(get("stop_sequence"), &seq)
 						t.Stops[get("stop_id")] = seq
 						t.Departures[get("stop_id")] = get("departure_time")
 					}
 				}
 			}
-			r.Close()
+			_ = r.Close()
 		}
 		if !found {
 			return s, fmt.Errorf("falta %s al GTFS", name)
@@ -168,11 +174,13 @@ func schedule(kind, url string, refresh bool) (Schedule, error) {
 	}
 	return s, nil
 }
+
 func corridor(t *Trip) bool {
 	a, ok := t.Stops["71801"]
 	b, ok2 := t.Stops["79300"]
 	return ok && ok2 && a != b
 }
+
 func delay(u *Update, stop string) *int {
 	for _, s := range u.Stops {
 		if s.ID == stop {
@@ -186,6 +194,7 @@ func delay(u *Update, stop string) *int {
 	}
 	return nil
 }
+
 func text(t Text) string {
 	for _, x := range t.Translation {
 		if x.Language == "ca" {
@@ -197,20 +206,22 @@ func text(t Text) string {
 	}
 	return ""
 }
+
 func active(a *Alert, now int64) bool {
 	if len(a.Active) == 0 {
 		return true
 	}
 	for _, p := range a.Active {
 		var start, end int64
-		fmt.Sscan(p.Start, &start)
-		fmt.Sscan(p.End, &end)
+		_, _ = fmt.Sscan(p.Start, &start)
+		_, _ = fmt.Sscan(p.End, &end)
 		if (start == 0 || now >= start) && (end == 0 || now < end) {
 			return true
 		}
 	}
 	return false
 }
+
 func feed(url string) (Feed, error) {
 	var f Feed
 	b, e := download(url)
@@ -220,10 +231,10 @@ func feed(url string) (Feed, error) {
 	e = json.Unmarshal(b, &f)
 	return f, e
 }
-func collect(w io.Writer, refresh bool) error {
-	output := w
+
+func collect(output io.Writer, refresh bool) error {
 	var body bytes.Buffer
-	w = &body
+	w := &body
 	r11 := lineState{}
 	r11Routes := map[string]bool{}
 	loc, err := time.LoadLocation("Europe/Madrid")
@@ -256,7 +267,7 @@ func collect(w io.Writer, refresh bool) error {
 			continue
 		}
 		var stamp int64
-		fmt.Sscan(f.Header.Timestamp, &stamp)
+		_, _ = fmt.Sscan(f.Header.Timestamp, &stamp)
 		if src.kind == "cer" {
 			r11.available = true
 			r11.stale = stamp == 0 || now.Sub(time.Unix(stamp, 0)) > 15*time.Minute
@@ -348,7 +359,9 @@ func collect(w io.Writer, refresh bool) error {
 		failed = true
 	}
 	fmt.Fprintln(w, "Només es mostren trens amb actualització en temps real i correspondència exacta amb els horaris. Absència de dades ≠ puntualitat.")
-	fmt.Fprintln(output, r11.summary())
+	if _, err := fmt.Fprintln(output, r11.summary()); err != nil {
+		return err
+	}
 	if _, err := io.Copy(output, &body); err != nil {
 		return err
 	}
