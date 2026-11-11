@@ -17,11 +17,14 @@ func (offlineTransport) RoundTrip(*http.Request) (*http.Response, error) {
 func TestCollectOfflineDoesNotPanic(t *testing.T) {
 	previous := client
 	client = &http.Client{Transport: offlineTransport{}}
+
 	t.Cleanup(func() { client = previous })
+
 	var report bytes.Buffer
 	if err := collect(&report, true); err == nil {
 		t.Fatal("Cal indicar que les fonts no estan disponibles")
 	}
+
 	if !strings.Contains(report.String(), "Barcelona Sants ↔ Girona") {
 		t.Fatal("Cal mostrar el resultat parcial sense fallar amb un pànic")
 	}
@@ -44,6 +47,7 @@ func TestCorridorRequiresBothStops(t *testing.T) {
 
 func TestMissingDestinationDelayIsUnknown(t *testing.T) {
 	zero := 0
+
 	u := Update{Delay: &zero}
 	if delay(&u, "79300") != nil {
 		t.Fatal("No s'ha d'inventar un retard a destinació")
@@ -55,6 +59,7 @@ func TestAlertPeriods(t *testing.T) {
 	if !active(&a, 100) {
 		t.Fatal("Sense períodes, l'avís és actiu")
 	}
+
 	a.Active = append(a.Active, struct {
 		Start string `json:"start"`
 		End   string `json:"end"`

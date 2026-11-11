@@ -118,6 +118,14 @@ golangci-lint fmt
 golangci-lint run ./...
 ```
 
+### Format i línies en blanc
+
+- **`gofmt`** és el formatador oficial de Go. És la referència per a la indentació i la disposició del codi. [Effective Go · Formatting](https://go.dev/doc/effective_go#formatting) · [Manual de `gofmt`](https://pkg.go.dev/cmd/gofmt)
+- **`gofumpt`** aplica un format compatible amb `gofmt` i hi afegeix regles. És el formatador que fem servir amb `golangci-lint fmt`. [Regles de `gofumpt`](https://github.com/mvdan/gofumpt#added-rules)
+- **`wsl_v5`** comprova l'espaiat dins les funcions. Al projecte hi hem activat `after-block` per separar un bloc de la instrucció següent. Per exemple, a `schedule`, hi ha una línia en blanc entre el bloc que actualitza la memòria cau i l'obertura del ZIP. Una operació i el seu `if err != nil` poden quedar junts. [Configuració de `wsl_v5`](https://golangci-lint.run/docs/linters/configuration/#wsl_v5)
+
+Les línies en blanc entre funcions i la separació de blocs són convencions de llegibilitat del projecte. Per aplicar les correccions automàtiques del linter, executa `golangci-lint run --fix ./...`. La configuració és a [`.golangci.yml`](.golangci.yml).
+
 És un projecte petit que aniré ajustant segons el que em trobi i les ganes que en tingui. Si hi veus alguna cosa que falla o tens una idea que faria més fàcil consultar els trens, obre una issue.
 
 Les versions es documenten a [CHANGELOG.md](CHANGELOG.md). En pujar una etiqueta `v*`, GitHub Actions executa les proves i publica els binaris per a Windows x64 i macOS arm64, amb les sumes SHA-256.
